@@ -1,0 +1,206 @@
+---
+title: "Homework 4"
+output:
+  pdf_document: default
+  html_document: default
+author: Aditya Prasad - 
+        arp4759
+date: "2024-02-20"
+---
+
+```         
+                   Github: https://github.com/aprasad-1/Homework4.git
+                   
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(mosaic)
+```
+
+Claim: Gas stations charge more if they lack direct competition in sight.
+
+```{r, echo = FALSE, message = FALSE}
+gas_prices = read_csv('gasprices.csv')
+boot_price_competitors = do(10000)*diffmean(Price ~ Competitors, data=resample(gas_prices))
+ggplot(boot_price_competitors) + 
+  geom_histogram(aes(x=diffmean))
+confint(boot_price_competitors, level = 0.95)
+
+```
+
+Evidence: We are 95 percent confident that mean difference between price of gas at gas stations with competition and without competition is between -0.05 and 0.007.
+
+Conclusion: Because 0 is in the interval, it can be concluded that the mean difference between price of gas at gas stations with competition and without competition is insignificant, proving the theory incorrect with a 95% confidence level.
+
+Claim: The richer the area, the higher the gas prices.
+
+```{r, echo = FALSE}
+boot_price_income = do(10000)*cor(Price ~ Income, data=resample(gas_prices))
+ggplot(boot_price_income) + 
+  geom_histogram(aes(x=cor))
+confint(boot_price_income, level = 0.95)
+
+```
+
+Evidence: We are 95% confident that the correlation value between price of gas and income is between 0.197 and 0.566.
+
+Conclusion: Because 0 is not a part of this confidence interval and since moderately positive strong correlation values are included in the interval, that means we can conclude that there is a positive correlation between income in an area and gas prices, estimated at around 0.4.
+
+Claim: Gas stations at stoplights charge more.
+
+```{r, echo=FALSE}
+boot_price_stoplight = do(10000)*diffmean(Price ~ Stoplight, data=resample(gas_prices))
+ggplot(boot_price_stoplight) + 
+  geom_histogram(aes(x=diffmean))
+confint(boot_price_stoplight, level = 0.95)
+
+```
+
+Evidence: We are 95% confident that the mean difference between price of gas at locations with stoplights and locations without stopsigns is between -0.03 and 0.03.
+
+Conclusion: Because 0 is in the confidence interval, the mean difference between price of gas at locations with stoplights and locations without stop signs is statistically insignificant, proving that the theory is incorrect.
+
+Claim: Gas stations with direct highway access charge more.
+
+```{r, echo=FALSE}
+boot_price_highway = do(10000)*diffmean(Price ~ Highway, data=resample(gas_prices)) 
+ggplot(boot_price_highway) + 
+  geom_histogram(aes(x=diffmean)) 
+confint(boot_price_highway, level = 0.95) 
+```
+
+Evidence: We are 95% confident that the mean difference between price of gas with direct access to highways and no direct access to highways is between 0.008 and 0.08.
+
+Conclusion: Even though the interval does not contain 0, the mean difference is practically insignificant since the values of the confidence interval are so small, they are almost 0. This means there is practically no proof that Gas stations with direct highway access charge more.
+
+Claim: Shell charges more than all other non-Shell brands.
+
+```{r, echo=FALSE}
+gas_prices = gas_prices  %>% 
+  mutate(brand_shell = ifelse(Brand == "Shell", TRUE, FALSE))
+
+boot_price_shell = do(10000)*diffmean(Price ~ brand_shell, data=resample(gas_prices))
+
+ggplot(boot_price_shell) + 
+  geom_histogram(aes(x=diffmean))
+confint(boot_price_shell, level = 0.95)
+
+```
+
+Evidence: We are 95% confident that the mean difference between price of gas at Shell vs. non-Shell brands is between -0.009 and 0.06.
+
+Conclusion: Because 0 is in the confidence interval, we are 95 percent confident that the mean difference between price of gas at Shell vs. non-Shell brands is statistically insignificant, proving the theory wrong.
+
+```{r, echo=FALSE}
+
+sclass = read.csv('sclass.csv')
+
+sclass_63amg_2011 = sclass %>%
+  filter(year == 2011 & trim == "63 AMG")
+
+boot_mileage = do(10000)*mean(mosaic::resample(sclass_63amg_2011$mileage))
+
+confint(boot_mileage, level = 0.95)
+
+```
+
+We are 95% confident that the mean mileage of 2011 63 AMG's hitting the used car market is between 26277.68 and 31764.48 miles.
+
+```{r, echo=FALSE}
+sclass_550_2014 = sclass %>%
+  filter(year == 2014 & trim == "550") %>%
+  mutate(isBlack = ifelse(color == "Black", TRUE, FALSE))
+
+boot_isBlack = do(10000)*prop(mosaic::resample(sclass_550_2014$isBlack))
+
+confint(boot_isBlack, level = 0.95)
+
+```
+
+We are 95% confident that the proportion of 2014 S-Class 550's that were painted black is between 0.417 and 0.453.
+
+Question: Who makes people happier: Ed or Earl? Is there evidence that one show consistently produces a higher mean Q1_Happy response among viewers?
+
+```{r, echo=FALSE}
+nbc_survey = read.csv('nbc_pilotsurvey.csv')
+
+nbc_ed_earl = nbc_survey %>%
+  filter(Show == "Living with Ed" | Show == "My Name is Earl") 
+  
+
+
+boot_ed_earl = do(10000)*diffmean(Q1_Happy ~ Show, data=resample(nbc_ed_earl))
+
+confint(boot_ed_earl, level = 0.95)
+
+```
+
+Approach: First, I filtered the data to both shows and implemented the bootstrapping method to resample the data 10,000 times and find the difference in means. Then, I used the confint function to output the confidence interval of the mean difference.
+
+Results: We are 95 percent confident that the mean difference of the happiness rating of the shows "Living with Ed" and "My name is Earl" is between -0.39 and 0.101.
+
+Conclusion: Because 0 is in the confidence interval, the mean difference of the happiness rating of the shows "Living with Ed" and "My name is Earl" is statistically insignificant. This means that there is no sufficient evidence that proves one show consistently produces a higher mean Q1_Happy response among viewers.
+
+Question: Consider the shows “The Biggest Loser” and “The Apprentice: Los Angeles.” Which reality/contest show made people feel more annoyed? Is there evidence that one show consistently produces a higher mean Q1_Annoyed response among viewers?
+
+```{r, echo = FALSE}
+
+nbc_loser_la = nbc_survey %>%
+  filter(Show == "The Biggest Loser" | Show == "The Apprentice: Los Angeles")
+
+mean_loser_la = nbc_loser_la %>%
+  group_by(Show) %>%
+  summarise(mean_Q1_annoyed = mean(Q1_Annoyed))
+
+mean_loser_la
+boot_loser_la = do(10000)*diffmean(Q1_Annoyed ~ Show, data=resample(nbc_loser_la))
+
+confint(boot_loser_la, level = 0.95)
+```
+
+Approach: First, I filtered out all shows except the reality shows: "The Biggest Loser" and "The Apprentice: Los Angeles". I calculated the mean rating of the response to Q1_Annoyed for both shows. Next I implemented the bootstrapping method where I calculated the mean difference of the responses to Q1_Annoyed for both shows by resampling 10,000 times. Finally, I calculated the 95% confidence interval using the confint function.
+
+Results: We are 95% confident that the mean difference of the response to Q1_Annoyed for "The Biggest Loser" and "The Apprentice: Los Angeles" is between -0.52 and -0.02. The mean of the rating response to Q1_Annoyed for "The Apprentice: Los Angeles" is 2.3 and the mean rating response to Q1_Annoyed for "The Biggest Loser" is 2.03.
+
+Conclusion: Because 0 is not in the confidence interval, this means that mean difference of the response to Q1_Annoyed for "The Biggest Loser" and "The Apprentice: Los Angeles" is statistically significant. In other words, there is evidence that one show consistenly had a higher mean rating for Q1_Annoyed than the other which was "The Apprentice: Los Angeles".
+
+Question: Consider the show “Dancing with the Stars.” What proportion of American TV watchers would we expect to give a response of 4 or greater to the “Q2_Confusing” question?
+
+```{r, echo=FALSE}
+nbc_stars = nbc_survey %>%
+  filter(Show == "Dancing with the Stars" )
+
+boot_stars = do(10000)*prop(mosaic::resample(nbc_stars$Q2_Confusing >= 4))
+
+confint(boot_stars, level = 0.95)
+```
+
+Approach: First, I filtered out all the shows except "Dancing with the Stars". Then, I implemented the bootstrapping method, where I calculated the proportion of American TV Watchers who would give Q2_Confusing at least a 4 rating by resampling this data 10,000 times. Finally, I calculated the 95% confidence interval for this proportion.
+
+Results: We are 95% confident that the proportion of American TV Watchers who would give Q2_Confusing at least a 4 rating is between 0.038 and 0.11. The estimated proportion is around 0.07.
+
+Conclusion: Because 0 is not included in this confidence interval, proportion of American TV Watchers who would give Q2_Confusing at least a 4 rating is statistically significant, which is estimated to be around 0.072.
+
+Question: What is the revenue ratio difference between the treatment and control DMAs and provide a 95% confidence interval for the difference? Is the revenue ratio the same in the treatment and control groups?
+
+```{r, echo = FALSE}
+
+ebay = read.csv('ebay.csv')
+
+mean_ebay_rev_ratio = ebay %>%
+  group_by(adwords_pause) %>%
+  summarise(mean_rev_ratio = mean(rev_ratio))
+
+mean_ebay_rev_ratio
+
+boot_ebay = do(10000)*diffmean(rev_ratio ~ adwords_pause, data=resample(ebay))
+confint(boot_ebay, level = 0.95)
+```
+
+Approach: I implemented the bootstrapping technique, where I calculated the difference in means between the treatment and control group for the revenue ratio. I then calculated the 95% confidence interval using confint.
+
+Results: We are 95% confident that the mean difference of revenue ratio between the treatment and control DMAs is between -0.09 and -0.013. The estimated difference is between -0.05.
+
+Conclusion: Because 0 is not included in the confidence interval, mean difference of revenue ratio between the treatment and control DMAs is statistically significant. This means that the control group consistently produced a higher revenue ratio of 0.05 higher than the treatment group.
